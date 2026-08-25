@@ -58,6 +58,56 @@ npx wrangler deploy
 
 默认管理员账号 `admin` / `admin123`（来自 `wrangler.toml` 的 `ADMIN_USER`/`ADMIN_PASS`，也可在管理后台网页修改，修改后写入 KV 覆盖）。**请务必在管理后台修改默认密码。**
 
+## 方式二：通过 GitHub 一键 Git 部署（推荐，持续交付）
+
+把仓库推到 GitHub 后，在 Cloudflare 后台「连接 Git」，之后每次 `git push` 到 `main` 自动部署，PR 自动出预览环境。
+
+> ⚠️ 前置条件：**KV 命名空间必须先存在**，且 `wrangler.toml` 里的 `id` 已填真实值。Cloudflare 的 Git 集成**不会**自动创建 KV，绑定 id 不存在会导致部署失败。
+
+### A. 推送到 GitHub
+
+```bash
+cd tesla-media-hub-cf
+git remote add origin git@github.com:<你的用户名>/tesla-media-hub-cf.git
+git branch -M main
+git push -u origin main
+```
+
+### B. 在 Cloudflare 后台连接仓库
+
+1. 登录 Cloudflare 控制台 → **Workers & Pages** → **Create** → **Connect to Git**。
+2. 授权 GitHub，选择仓库 `tesla-media-hub-cf`、生产分支 `main`。
+3. Cloudflare 会读取 `wrangler.toml` 自动识别：
+   - `main = src/index.js` → Worker 入口；
+   - `[assets]` → 静态资源托管 `public/`；
+   - `[[kv_namespaces]] binding = "TMH_KV"` → KV 绑定（id 已在 toml 中）。
+4. 点击 **Deploy** 完成首次构建。
+
+### C. 配置变量与 Secret（关键）
+
+Git 集成部署时，以下配置从 `wrangler.toml` 与后台「变量和机密」读取，**无法从 Git 读取 Secret**，需手动设置：
+
+| 类型 | 名称 | 说明 | 设置位置 |
+| ---- | ---- | ---- | ---- |
+| **KV 绑定** | `TMH_KV` | 源配置/管理员账号存储（id 已在 `wrangler.toml` 填好；若后台未自动识别，需在 Worker → Settings → Variables and Secrets → Add → KV 选命名空间） | 后台 |
+| **明文变量** | `ADMIN_USER` / `ADMIN_PASS` | 默认管理员账号（已写在 `wrangler.toml` 的 `[vars]`，会随 Git 部署自动应用） | 无需额外操作（在 toml 内） |
+| **Secret（机密）** | `TMH_SECRET` | 登录态 HMAC 签名密钥。**必须手动设**，否则每次冷启动随机密钥、登录态易失效 | Worker → Settings → Variables and Secrets → **Add** → 选 **Secret** |
+
+设置 `TMH_SECRET`（两个环境都要加：Production 和 Preview，否则 PR 预览环境会登录异常）：
+
+1. Worker 详情 → **Settings** → **Variables and Secrets** → **Add**。
+2. 类型选 **Secret**，名称 `TMH_SECRET`，值填一段随机串（如本地执行 `openssl rand -hex 32` 的结果）。
+3. 对 **Production** 和 **Preview** 环境分别添加一次。
+
+> 账号 ID（`account_id`）：Git 集成部署时由后台所选账号决定，可不填；仅本地 `wrangler dev/deploy` 时需要，到 Cloudflare 后台右上角「账户 ID」获取后填入 `wrangler.toml`。
+
+### D. 之后如何更新
+
+```bash
+git commit -am "..." && git push   # 自动触发 Cloudflare 生产部署
+# 开 PR → 自动出 Preview 预览环境
+```
+
 ## 本地开发
 
 ```bash

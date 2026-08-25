@@ -2,6 +2,10 @@ name = "tesla-media-hub"
 main = "src/index.js"
 compatibility_date = "2025-05-01"
 
+# 你的 Cloudflare 账号 ID（Git 集成部署时可不填，由后台所选账号决定；本地 wrangler dev/deploy 需要）
+# 获取方式：Cloudflare 后台右上角「账户 ID」，或执行 `npx wrangler whoami`
+account_id = "REPLACE_WITH_YOUR_ACCOUNT_ID"
+
 # 静态资源（前端 public/）由 Cloudflare 静态资产直接托管，无需 /api 的请求会回退到这里
 [assets]
 directory = "./public"

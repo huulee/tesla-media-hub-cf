@@ -11,6 +11,11 @@ let SECRET = null;
 let ENV_USER = 'admin';
 let ENV_PASS = 'admin123';
 
+// 未配置 TMH_SECRET 时使用的内置默认值（已随机生成，写死在代码里）。
+// 这样即使不在 CF 后台设 Secret，部署也能稳定签发/校验登录 token（不会每次冷启动换密钥导致登录态失效）。
+// 若需自行更换，可在 CF 后台添加 Secret 类型的 TMH_SECRET 覆盖它。
+const BUILTIN_SECRET = '70acc766ad71cc78b8a6530a91b934174872fb9e4c7b27d4055f1f2b6a72ceb1';
+
 const DEFAULT_SOURCES = {
   sources: [
     { id: 'default-ffzy', name: '非凡影视', type: 'applecms', url: 'https://cj.ffzyapi.com/api.php/provide/vod/', remark: 'AppleCMS 采集接口' },
@@ -24,9 +29,9 @@ function init(env) {
   KV = env.TMH_KV;
   ENV_USER = env.ADMIN_USER || 'admin';
   ENV_PASS = env.ADMIN_PASS || 'admin123';
-  // 仅首次初始化时确定签名密钥：未配置 TMH_SECRET 则生成一次随机密钥
+  // 仅首次初始化时确定签名密钥：优先用后台 Secret TMH_SECRET，未配置则回退到代码内置默认值
   // （后续请求不要重复生成，否则每次都换密钥会让已签发 token 立刻失效）
-  if (SECRET === null) SECRET = env.TMH_SECRET || crypto.randomUUID();
+  if (SECRET === null) SECRET = env.TMH_SECRET || BUILTIN_SECRET;
 }
 
 // ---------- 源配置 ----------

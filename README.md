@@ -7,6 +7,8 @@
 - 源配置 / 管理员账号用 **KV** 持久化（替代原 Docker 的 `data/` 磁盘卷）；
 - **已移除 IPTV / ffmpeg**（Cloudflare 无法运行原生二进制、无法 spawn 子进程），车机点播 AppleCMS 直链的能力完整保留。
 
+> 本仓库同时提供 `docker-compose.yml`：若需要 **完整原版（含 IPTV 直播 ffmpeg 转码/代理）**，可直接 `docker compose up -d` 拉起官方镜像，见下文「方式三：Docker Compose 一键部署」。两种部署相互独立、按需选择。
+
 ## 与原版的区别
 
 | 项         | 原版（Docker）                            | 本版（Cloudflare）                        |
@@ -108,6 +110,44 @@ git commit -am "..." && git push   # 自动触发 Cloudflare 生产部署
 # 开 PR → 自动出 Preview 预览环境
 ```
 
+## 方式三：Docker Compose 一键部署（完整原版，含 IPTV 直播）
+
+如果你想要 **完整原版功能**（含 IPTV 直播 ffmpeg 转码/代理、HTTPS_PROXY 代理拉源等），而不仅是 Cloudflare 版的纯点播，可直接用仓库里的 `docker-compose.yml` 一键拉起官方镜像——**无需本地构建源码**：
+
+```bash
+# 在项目根目录执行（需已安装 Docker 与 Docker Compose v2）
+docker compose up -d
+```
+
+- 镜像：`docker.io/yan527754498/tesla-media-hub:latest`（由作者预构建并推送到 Docker Hub）
+- 访问地址：`http://<服务器IP>:6969`
+- 数据持久化：`./data` 目录挂载到容器内 `/app/data`，源配置与管理员账号不会随容器重建丢失
+- 默认管理员：`admin / admin123`（首次部署建议改强密码；亦可在管理后台修改）
+
+### 常用环境变量（改 `docker-compose.yml` 的 `environment` 段）
+
+| 变量 | 默认值 | 说明 |
+| ---- | ---- | ---- |
+| `PORT` | `6969` | 容器内监听端口（宿主机映射见 `ports`） |
+| `ADMIN_USER` / `ADMIN_PASS` | `admin` / `admin123` | 管理员账号 |
+| `IPTV_AUTH` | `true` | IPTV 播放是否要求管理员 token 鉴权（`false` 仅限可信内网，不建议公网） |
+| `IPTV_MAX_CONCURRENT` | `4` | 同时转码/代理的 IPTV 流上限，超出返回 429（防止 ffmpeg 被无限拉起） |
+| `HTTPS_PROXY` / `HTTP_PROXY` | 未设置 | NAS/家庭宽带无法直连影视源时，填代理地址（仅用于服务端拉取源站元数据/图片） |
+
+### 常用命令
+
+```bash
+docker compose ps                          # 查看运行状态
+docker compose logs -f                     # 跟踪日志
+docker compose down                        # 停止并移除容器（数据仍在 ./data）
+docker compose pull && docker compose up -d # 升级到最新镜像
+```
+
+> 注意：Docker 版与 Cloudflare 版是 **两套独立部署**：
+> - **Docker 版** = 完整原版（Express + ffmpeg + IPTV，镜像来自 Docker Hub `yan527754498/tesla-media-hub`）；
+> - **Cloudflare 版** = 纯点播 Worker（无 IPTV，源码在本仓库 `src/`）。
+> 两者账号体系、持久化（Docker 用 `./data` 磁盘 / CF 用 KV）互不通用，按需选择其一即可。
+
 ## 本地开发
 
 ```bash
@@ -132,7 +172,8 @@ npx wrangler dev
 
 ```
 tesla-media-hub-cf/
-├── wrangler.toml          # Worker + Assets + KV 配置
+├── wrangler.toml          # Worker + Assets + KV 配置（Cloudflare 版）
+├── docker-compose.yml     # 完整原版一键部署（Docker 版，拉取 Docker Hub 镜像）
 ├── package.json
 ├── src/
 │   ├── index.js           # Worker 入口（fetch handler + 路由）

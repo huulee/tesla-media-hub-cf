@@ -65,7 +65,7 @@ body { display: flex; flex-direction: column; overflow: hidden; }
   padding: 14px;
 }
 
-.page-title { font-size: 20px; font-weight: 700; margin: 4px 2px 12px; }
+.page-title { font-size: 20px; font-weight: 700; margin: 4px 2px 12px; display:none;}
 .section-title {
   font-size: 15px;
   color: var(--text-dim);

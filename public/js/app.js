@@ -69,7 +69,7 @@ window.addEventListener('hashchange', render);
 
 // ---------- 首页：数据源列表（仅切换用，管理在 /admin） ----------
 async function renderHome() {
-  setTitle('彬彬有礼，璐光溢彩，瑶望未来', '选择数据源');
+  setTitle('卓尔不凡', '选择数据源');
   const data = await api('/api/sources');
   const list = data.list || [];
   app.innerHTML = `

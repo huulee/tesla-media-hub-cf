@@ -55,7 +55,7 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 
 .title-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 #page-title { font-size: 19px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.page-sub { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page-sub { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:none;}
 
 /* ---------- 主内容 ---------- */
 #app {

@@ -123,7 +123,7 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 /* 源/站点卡片 */
 .source-card { padding: 16px; display: flex; flex-direction: column; gap: 6px; min-height: 96px; }
 .card-title { font-size: 17px; font-weight: 700; }
-.card-meta { font-size: 13px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-meta { font-size: 13px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display:none;}
 .badge {
   display: inline-block;
   font-size: 12px;
